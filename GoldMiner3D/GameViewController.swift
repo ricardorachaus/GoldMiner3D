@@ -27,7 +27,14 @@ class GameViewController: UIViewController {
         scnView.scene = scene
         scnView.allowsCameraControl = true
         scnView.showsStatistics = true
-        
+        scene.physicsWorld.contactDelegate = self
+        setup(scene)
+    }
+    
+    /**
+     Setup the scene and claw movement
+     */
+    func setup(_ scene: SCNScene) {
         claw = scene.rootNode.childNode(withName: "Claw", recursively: false)
         
         let action = SCNAction.move(by: SCNVector3(0, 0, -4), duration: 1)
@@ -35,11 +42,8 @@ class GameViewController: UIViewController {
         let initialPosition = SCNAction.move(to: SCNVector3(0, 0, 0), duration: 1)
         let sequence = SCNAction.sequence([action, initialPosition, reverse, initialPosition])
         movementAction = SCNAction.repeatForever(sequence)
-
+        
         claw?.runAction(movementAction, forKey: movementKey)
-        
-        scene.physicsWorld.contactDelegate = self
-        
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -57,6 +61,14 @@ extension GameViewController: SCNPhysicsContactDelegate {
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
         let nodeA = contact.nodeA
         let nodeB = contact.nodeB
+        
+        handleContact(nodeA: nodeA, nodeB: nodeB)
+    }
+    
+    /**
+     Handle the contact to remove object contacted.
+     */
+    func handleContact(nodeA: SCNNode, nodeB: SCNNode) {
         let name = nodeA.name!
         
         if nodeB.name == "Claw" {
